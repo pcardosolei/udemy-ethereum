@@ -1,14 +1,14 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.7.4;
 
 contract CampaignFactory {
     address[] public deployedCampaigns;
     
     function createCampaign(uint minimum) public {
-        address newCampaign = new Campaign(minimum, msg.sender);
+        address newCampaign = address(new Campaign(minimum, msg.sender));
         deployedCampaigns.push(newCampaign);
     }
     
-    function getDeployedCampaigns() public view returns(address[]){
+    function getDeployedCampaigns() public view returns(address[] memory){
         return deployedCampaigns;
     }
 }
@@ -17,12 +17,13 @@ contract Campaign {
     struct Request{ // struct definition - its defining the type
         string description;
         uint value;
-        address recipient;
+        address payable recipient;
         bool complete;
         uint approvalCount;
         mapping(address => bool) approvals;
     }
 
+    uint numRequests;
     Request[] public requests;
     address public manager;
     uint public minimumContribution;
@@ -35,9 +36,10 @@ contract Campaign {
         _; // the rest of the function
     }
     
-    function Campaign(uint minimum, address creator) public {
+    constructor(uint minimum, address creator) {
         manager = creator;
         minimumContribution = minimum;
+        numRequests = 0;
     }
     
     function contribute() public payable {
@@ -47,16 +49,14 @@ contract Campaign {
         approversCount++;
     }
     
-    function createRequest(string description, uint value, address recipient) public restricted{
-        Request memory newRequest = Request({
-            description: description,
-            value: value,
-            recipient: recipient,
-            complete: false,
-            approvalCount: 0
-        });
-        
-        requests.push(newRequest);
+    function createRequest(string calldata description, uint value, address payable recipient) public restricted{
+        numRequests++;
+        Request storage newRequest = requests[numRequests];
+        newRequest.description = description;
+        newRequest.value = value;
+        newRequest.recipient = recipient;
+        newRequest.complete = false;
+        newRequest.approvalCount = 0;
     }
     
     function approveRequest(uint index) public {
