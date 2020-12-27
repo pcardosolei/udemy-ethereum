@@ -50,14 +50,16 @@ contract Campaign {
         approversCount++;
     }
     
-    function createRequest(string memory description, uint value, address payable recipient) public restricted{
-        numRequests++;
+    function createRequest(string memory description, uint value, address payable recipient) public restricted {
+        requests.push(); // need to do this to add a new position on the array.
         Request storage newRequest = requests[numRequests];
         newRequest.description = description;
         newRequest.value = value;
         newRequest.recipient = recipient;
         newRequest.complete = false;
         newRequest.approvalCount = 0;
+        
+        numRequests++;
     }
     
     function approveRequest(uint index) public {
